@@ -755,7 +755,7 @@ class App {
     }
     _setupInstallPrompt() {
         let deferredPrompt;
-        window.addEventListener('beforeinstallprompt', (e)=>{
+        window.addEventListener("beforeinstallprompt", (e)=>{
             // Prevent the mini-infobar from appearing on mobile
             e.preventDefault();
             // Stash the event so it can be triggered later
@@ -763,22 +763,22 @@ class App {
             // Show install button
             this._showInstallPrompt(deferredPrompt);
         });
-        window.addEventListener('appinstalled', ()=>{
-            console.log('PWA was installed');
+        window.addEventListener("appinstalled", ()=>{
+            console.log("PWA was installed");
             this._hideInstallPrompt();
         });
     }
     _showInstallPrompt(deferredPrompt) {
-        const installPrompt = document.createElement('div');
-        installPrompt.className = 'install-prompt';
-        installPrompt.id = 'install-prompt';
+        const installPrompt = document.createElement("div");
+        installPrompt.className = "install-prompt";
+        installPrompt.id = "install-prompt";
         installPrompt.innerHTML = `
       <p>\u{1F4F1} Install Dicoding Story App for a better experience!</p>
       <button id="install-app">Install</button>
       <button id="dismiss-install">Later</button>
     `;
         document.body.appendChild(installPrompt);
-        document.getElementById('install-app').addEventListener('click', async ()=>{
+        document.getElementById("install-app").addEventListener("click", async ()=>{
             // Show the install prompt
             deferredPrompt.prompt();
             // Wait for the user to respond to the prompt
@@ -788,30 +788,30 @@ class App {
             deferredPrompt = null;
             this._hideInstallPrompt();
         });
-        document.getElementById('dismiss-install').addEventListener('click', ()=>{
+        document.getElementById("dismiss-install").addEventListener("click", ()=>{
             this._hideInstallPrompt();
         });
     }
     _hideInstallPrompt() {
-        const installPrompt = document.getElementById('install-prompt');
+        const installPrompt = document.getElementById("install-prompt");
         if (installPrompt) installPrompt.remove();
     }
     _setupOfflineDetection() {
         const showOfflineIndicator = ()=>{
-            if (!document.getElementById('offline-indicator')) {
-                const indicator = document.createElement('div');
-                indicator.id = 'offline-indicator';
-                indicator.className = 'offline-indicator';
+            if (!document.getElementById("offline-indicator")) {
+                const indicator = document.createElement("div");
+                indicator.id = "offline-indicator";
+                indicator.className = "offline-indicator";
                 indicator.textContent = "\uD83D\uDCF6 You are offline. Some features may be limited.";
                 document.body.appendChild(indicator);
             }
         };
         const hideOfflineIndicator = ()=>{
-            const indicator = document.getElementById('offline-indicator');
+            const indicator = document.getElementById("offline-indicator");
             if (indicator) indicator.remove();
         };
-        window.addEventListener('online', hideOfflineIndicator);
-        window.addEventListener('offline', showOfflineIndicator);
+        window.addEventListener("online", hideOfflineIndicator);
+        window.addEventListener("offline", showOfflineIndicator);
         // Check initial state
         if (!navigator.onLine) showOfflineIndicator();
     }
@@ -953,7 +953,7 @@ class HomePage {
         try {
             await this._indexedDBService.init();
         } catch (error) {
-            console.error('Failed to initialize IndexedDB:', error);
+            console.error("Failed to initialize IndexedDB:", error);
         }
     }
     async _fetchStories() {
@@ -971,7 +971,7 @@ class HomePage {
         for (const story of this._stories)try {
             await this._indexedDBService.cacheStory(story);
         } catch (error) {
-            console.error('Failed to cache story:', error);
+            console.error("Failed to cache story:", error);
         }
         storyListElement.innerHTML = await Promise.all(this._stories.map(async (story)=>{
             const isFavorite = await this._checkIfFavorite(story.id);
@@ -985,9 +985,9 @@ class HomePage {
           <div class="story-actions">
             <a href="#/detail/${story.id}" class="story-link">Read more</a>
             <button 
-              class="favorite-btn ${isFavorite ? 'is-favorite' : ''}" 
+              class="favorite-btn ${isFavorite ? "is-favorite" : ""}" 
               data-story-id="${story.id}"
-              aria-label="${isFavorite ? 'Remove from favorites' : 'Add to favorites'}"
+              aria-label="${isFavorite ? "Remove from favorites" : "Add to favorites"}"
             >
               ${isFavorite ? "\u2764\uFE0F Remove from Favorites" : "\uD83E\uDD0D Add to Favorites"}
             </button>
@@ -1002,23 +1002,23 @@ class HomePage {
         try {
             return await this._indexedDBService.isFavoriteStory(storyId);
         } catch (error) {
-            console.error('Failed to check favorite status:', error);
+            console.error("Failed to check favorite status:", error);
             return false;
         }
     }
     _initFavoriteButtons() {
-        const favoriteButtons = document.querySelectorAll('.favorite-btn');
+        const favoriteButtons = document.querySelectorAll(".favorite-btn");
         favoriteButtons.forEach((button)=>{
-            button.addEventListener('click', async (e)=>{
+            button.addEventListener("click", async (e)=>{
                 e.preventDefault();
                 const storyId = button.dataset.storyId;
-                const isFavorite = button.classList.contains('is-favorite');
+                const isFavorite = button.classList.contains("is-favorite");
                 try {
                     if (isFavorite) await this._removeFavorite(storyId, button);
                     else await this._addFavorite(storyId, button);
                 } catch (error) {
-                    console.error('Failed to update favorite:', error);
-                    this.showError('Failed to update favorite status');
+                    console.error("Failed to update favorite:", error);
+                    this.showError("Failed to update favorite status");
                 }
             });
         });
@@ -1027,17 +1027,17 @@ class HomePage {
         const story = this._stories.find((s)=>s.id === storyId);
         if (!story) return;
         await this._indexedDBService.addFavoriteStory(story);
-        button.classList.add('is-favorite');
+        button.classList.add("is-favorite");
         button.textContent = "\u2764\uFE0F Remove from Favorites";
-        button.setAttribute('aria-label', 'Remove from favorites');
-        this.showSuccess('Story added to favorites!');
+        button.setAttribute("aria-label", "Remove from favorites");
+        this.showSuccess("Story added to favorites!");
     }
     async _removeFavorite(storyId, button) {
         await this._indexedDBService.removeFavoriteStory(storyId);
-        button.classList.remove('is-favorite');
+        button.classList.remove("is-favorite");
         button.textContent = "\uD83E\uDD0D Add to Favorites";
-        button.setAttribute('aria-label', 'Add to favorites');
-        this.showSuccess('Story removed from favorites!');
+        button.setAttribute("aria-label", "Add to favorites");
+        this.showSuccess("Story removed from favorites!");
     }
     _initMap() {
         this._map = L.map("map").setView([
@@ -1726,7 +1726,7 @@ class AddStoryPage {
             await this._indexedDBService.init();
             await this._pushNotificationService.init();
         } catch (error) {
-            console.error('Failed to initialize services:', error);
+            console.error("Failed to initialize services:", error);
         }
     }
     _initMap() {
@@ -1809,7 +1809,7 @@ class AddStoryPage {
                 } else {
                     // Save for offline sync
                     await this._saveOfflineStory(description);
-                    this.showSuccess('Story saved offline. It will be uploaded when you\'re back online.');
+                    this.showSuccess("Story saved offline. It will be uploaded when you're back online.");
                 }
                 if (this._stream) this._stream.getTracks().forEach((track)=>track.stop());
                 setTimeout(()=>{
@@ -1825,13 +1825,13 @@ class AddStoryPage {
         try {
             await this._indexedDBService.addOfflineStory(description, this._photoBlob, this._position?.lat, this._position?.lon);
             // Register for background sync if supported
-            if ('serviceWorker' in navigator && 'sync' in window.ServiceWorkerRegistration.prototype) {
+            if ("serviceWorker" in navigator && "sync" in window.ServiceWorkerRegistration.prototype) {
                 const registration = await navigator.serviceWorker.ready;
-                await registration.sync.register('background-sync-story');
+                await registration.sync.register("background-sync-story");
             }
         } catch (error) {
-            console.error('Failed to save offline story:', error);
-            throw new Error('Failed to save story offline');
+            console.error("Failed to save offline story:", error);
+            throw new Error("Failed to save story offline");
         }
     }
     async _sendStoryNotification(description) {
@@ -1839,50 +1839,50 @@ class AddStoryPage {
             // Check if push notifications are supported and subscribed
             const status = await this._pushNotificationService.getSubscriptionStatus();
             if (status.isSubscribed) // The server will send the push notification
-            console.log('Story created, push notification will be sent by server');
+            console.log("Story created, push notification will be sent by server");
         } catch (error) {
-            console.error('Failed to handle push notification:', error);
+            console.error("Failed to handle push notification:", error);
         // Don't throw error as story creation was successful
         }
     }
     async _initNotificationSection() {
-        const statusElement = document.getElementById('notification-status');
-        const enableButton = document.getElementById('enable-notifications');
-        const disableButton = document.getElementById('disable-notifications');
+        const statusElement = document.getElementById("notification-status");
+        const enableButton = document.getElementById("enable-notifications");
+        const disableButton = document.getElementById("disable-notifications");
         try {
             const status = await this._pushNotificationService.getSubscriptionStatus();
             if (status.isSubscribed) {
                 statusElement.innerHTML = '<p class="alert alert-success">\u2705 Push notifications are enabled</p>';
-                disableButton.style.display = 'inline-block';
-                enableButton.style.display = 'none';
+                disableButton.style.display = "inline-block";
+                enableButton.style.display = "none";
             } else {
                 statusElement.innerHTML = '<p class="alert alert-info">\uD83D\uDD14 Enable push notifications to get notified when your stories are published</p>';
-                enableButton.style.display = 'inline-block';
-                disableButton.style.display = 'none';
+                enableButton.style.display = "inline-block";
+                disableButton.style.display = "none";
             }
         } catch (error) {
             statusElement.innerHTML = '<p class="alert alert-warning">\u26A0\uFE0F Push notifications are not supported in this browser</p>';
-            enableButton.style.display = 'none';
-            disableButton.style.display = 'none';
+            enableButton.style.display = "none";
+            disableButton.style.display = "none";
         }
-        enableButton.addEventListener('click', async ()=>{
+        enableButton.addEventListener("click", async ()=>{
             try {
                 await this._pushNotificationService.subscribe();
                 await this._initNotificationSection(); // Refresh the section
-                this.showSuccess('Push notifications enabled successfully!');
+                this.showSuccess("Push notifications enabled successfully!");
             } catch (error) {
-                console.error('Failed to enable notifications:', error);
-                this.showError('Failed to enable push notifications');
+                console.error("Failed to enable notifications:", error);
+                this.showError("Failed to enable push notifications");
             }
         });
-        disableButton.addEventListener('click', async ()=>{
+        disableButton.addEventListener("click", async ()=>{
             try {
                 await this._pushNotificationService.unsubscribe();
                 await this._initNotificationSection(); // Refresh the section
-                this.showSuccess('Push notifications disabled successfully!');
+                this.showSuccess("Push notifications disabled successfully!");
             } catch (error) {
-                console.error('Failed to disable notifications:', error);
-                this.showError('Failed to disable push notifications');
+                console.error("Failed to disable notifications:", error);
+                this.showError("Failed to disable push notifications");
             }
         });
     }
@@ -2380,7 +2380,7 @@ class DetailPage {
         try {
             await this._indexedDBService.init();
         } catch (error) {
-            console.error('Failed to initialize IndexedDB:', error);
+            console.error("Failed to initialize IndexedDB:", error);
         }
     }
     async _fetchStory() {
@@ -2391,7 +2391,7 @@ class DetailPage {
             // Try to get from IndexedDB cache
             try {
                 this._story = await this._indexedDBService.getCachedStory(this._id);
-                if (this._story) console.log('Story loaded from cache');
+                if (this._story) console.log("Story loaded from cache");
             } catch (cacheError) {
                 console.error("Error loading from cache:", cacheError);
             }
@@ -2412,8 +2412,8 @@ class DetailPage {
         <div class="story-actions">
           <button 
             id="favorite-btn" 
-            class="favorite-btn ${isFavorite ? 'is-favorite' : ''}"
-            aria-label="${isFavorite ? 'Remove from favorites' : 'Add to favorites'}"
+            class="favorite-btn ${isFavorite ? "is-favorite" : ""}"
+            aria-label="${isFavorite ? "Remove from favorites" : "Add to favorites"}"
           >
             ${isFavorite ? "\u2764\uFE0F Remove from Favorites" : "\uD83E\uDD0D Add to Favorites"}
           </button>
@@ -2429,37 +2429,37 @@ class DetailPage {
         try {
             return await this._indexedDBService.isFavoriteStory(storyId);
         } catch (error) {
-            console.error('Failed to check favorite status:', error);
+            console.error("Failed to check favorite status:", error);
             return false;
         }
     }
     _initFavoriteButton() {
-        const favoriteButton = document.getElementById('favorite-btn');
-        favoriteButton.addEventListener('click', async (e)=>{
+        const favoriteButton = document.getElementById("favorite-btn");
+        favoriteButton.addEventListener("click", async (e)=>{
             e.preventDefault();
-            const isFavorite = favoriteButton.classList.contains('is-favorite');
+            const isFavorite = favoriteButton.classList.contains("is-favorite");
             try {
                 if (isFavorite) await this._removeFavorite(favoriteButton);
                 else await this._addFavorite(favoriteButton);
             } catch (error) {
-                console.error('Failed to update favorite:', error);
-                this.showError('Failed to update favorite status');
+                console.error("Failed to update favorite:", error);
+                this.showError("Failed to update favorite status");
             }
         });
     }
     async _addFavorite(button) {
         await this._indexedDBService.addFavoriteStory(this._story);
-        button.classList.add('is-favorite');
+        button.classList.add("is-favorite");
         button.textContent = "\u2764\uFE0F Remove from Favorites";
-        button.setAttribute('aria-label', 'Remove from favorites');
-        this.showSuccess('Story added to favorites!');
+        button.setAttribute("aria-label", "Remove from favorites");
+        this.showSuccess("Story added to favorites!");
     }
     async _removeFavorite(button) {
         await this._indexedDBService.removeFavoriteStory(this._story.id);
-        button.classList.remove('is-favorite');
+        button.classList.remove("is-favorite");
         button.textContent = "\uD83E\uDD0D Add to Favorites";
-        button.setAttribute('aria-label', 'Add to favorites');
-        this.showSuccess('Story removed from favorites!');
+        button.setAttribute("aria-label", "Add to favorites");
+        this.showSuccess("Story removed from favorites!");
     }
     _initMap() {
         this._map = L.map("map").setView([
