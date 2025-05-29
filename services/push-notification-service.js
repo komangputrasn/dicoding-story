@@ -51,7 +51,9 @@ class PushNotificationService {
         return true;
       } else if (permission === "denied") {
         console.log("Notification permission denied");
-        throw new Error("Notification permission was denied. Please enable notifications in your browser settings.");
+        throw new Error(
+          "Notification permission was denied. Please enable notifications in your browser settings."
+        );
       } else {
         console.log("Notification permission dismissed");
         throw new Error("Notification permission was not granted");

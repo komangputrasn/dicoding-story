@@ -265,8 +265,10 @@ class AddStoryPage {
         return;
       }
 
-      const permissionStatus = this._pushNotificationService.getPermissionStatus();
-      const status = await this._pushNotificationService.getSubscriptionStatus();
+      const permissionStatus =
+        this._pushNotificationService.getPermissionStatus();
+      const status =
+        await this._pushNotificationService.getSubscriptionStatus();
 
       if (permissionStatus === "denied") {
         statusElement.innerHTML =
@@ -297,30 +299,34 @@ class AddStoryPage {
         // Show loading state
         enableButton.disabled = true;
         enableButton.textContent = "Enabling...";
-        
+
         // Check permission first
-        const permissionStatus = this._pushNotificationService.getPermissionStatus();
-        
+        const permissionStatus =
+          this._pushNotificationService.getPermissionStatus();
+
         if (permissionStatus === "denied") {
-          throw new Error("Notifications are blocked. Please enable them in your browser settings and try again.");
+          throw new Error(
+            "Notifications are blocked. Please enable them in your browser settings and try again."
+          );
         }
-        
+
         await this._pushNotificationService.subscribe();
         await this._initNotificationSection(); // Refresh the section
         this.showSuccess("Push notifications enabled successfully!");
       } catch (error) {
         console.error("Failed to enable notifications:", error);
-        
+
         // Provide specific error messages
         let errorMessage = "Failed to enable push notifications";
         if (error.message.includes("permission")) {
-          errorMessage = "Permission denied. Please allow notifications in your browser and try again.";
+          errorMessage =
+            "Permission denied. Please allow notifications in your browser and try again.";
         } else if (error.message.includes("login")) {
           errorMessage = "Please log in first to enable notifications.";
         } else if (error.message.includes("settings")) {
           errorMessage = error.message;
         }
-        
+
         this.showError(errorMessage);
       } finally {
         // Reset button state

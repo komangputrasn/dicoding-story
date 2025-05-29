@@ -13,8 +13,11 @@ class HomePage {
   async render() {
     this._container.innerHTML = `
       <section class="page" role="region" aria-labelledby="home-title">
-        <h2 id="home-title">Latest Stories</h2>
-        <div id="loading" role="status" aria-live="polite">Loading stories...</div>
+        <h2 id="home-title">✨ Latest Stories</h2>
+        <div id="loading" role="status" aria-live="polite" class="loading-container">
+          <div class="loading-spinner"></div>
+          <p>Loading amazing stories...</p>
+        </div>
         <div id="error-container" role="alert" aria-live="assertive" style="display:none;"></div>
         <div id="map" aria-label="Map showing story locations"></div>
         <div id="story-list" class="story-list"></div>
@@ -46,8 +49,14 @@ class HomePage {
     loadingElement.style.display = "none";
 
     if (this._stories.length === 0) {
-      storyListElement.innerHTML =
-        "<p>No stories found. Please login to see stories or add new ones.</p>";
+      storyListElement.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">📚</div>
+          <h3>No Stories Yet</h3>
+          <p>Be the first to share your amazing story!</p>
+          <a href="#/add" class="btn">Create Your First Story</a>
+        </div>
+      `;
       return;
     }
 
@@ -64,27 +73,40 @@ class HomePage {
       this._stories.map(async (story) => {
         const isFavorite = await this._checkIfFavorite(story.id);
         return `
-      <article class="story-item">
-        <img src="${story.photoUrl}" alt="Photo by ${
+      <article class="story-item" data-story-id="${story.id}">
+        <div class="story-image-container">
+          <img src="${story.photoUrl}" alt="Photo by ${
           story.name
-        }" class="story-img">
+        }" class="story-img" loading="lazy">
+          <div class="story-overlay">
+            <a href="#/detail/${story.id}" class="story-quick-view">👁️ Quick View</a>
+          </div>
+        </div>
         <div class="story-content">
-          <h3>${story.name}</h3>
+          <div class="story-header">
+            <h3>${story.name}</h3>
+            <span class="story-badge">📖 Story</span>
+          </div>
           <p class="story-description">${this._truncateText(
             story.description,
-            100
+            120
           )}</p>
           <p class="story-date">${this._formatDate(story.createdAt)}</p>
           <div class="story-actions">
-            <a href="#/detail/${story.id}" class="story-link">Read more</a>
+            <a href="#/detail/${story.id}" class="story-link">
+              Read Full Story →
+            </a>
             <button 
               class="favorite-btn ${isFavorite ? "is-favorite" : ""}" 
               data-story-id="${story.id}"
               aria-label="${
                 isFavorite ? "Remove from favorites" : "Add to favorites"
               }"
+              title="${
+                isFavorite ? "Remove from favorites" : "Add to favorites"
+              }"
             >
-              ${isFavorite ? "❤️ Remove from Favorites" : "🤍 Add to Favorites"}
+              ${isFavorite ? "❤️" : "🤍"}
             </button>
           </div>
         </div>

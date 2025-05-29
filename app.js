@@ -16,6 +16,7 @@ import LoginPage from "./views/login-page.js";
 import RegisterPage from "./views/register-page.js";
 import DetailPage from "./views/detail-page.js";
 import FavoritesPage from "./views/favorites-page.js";
+import NotFoundPage from "./views/not-found-page.js";
 
 import AuthService from "./services/auth-service.js";
 import PushNotificationService from "./services/push-notification-service.js";
@@ -288,7 +289,6 @@ class App {
       id: splitedUrl[2] || null,
     };
   }
-
   _getPage(url) {
     let page;
 
@@ -307,7 +307,8 @@ class App {
       page = routes[url.resource];
     }
 
-    return page || routes["/"];
+    // Return 404 page if no route matches
+    return page || NotFoundPage;
   }
 
   _routeRequiresAuth(resource) {

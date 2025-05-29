@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Push Notification Test</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .test-section {
+        margin: 20px 0;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+      }
+      .pass {
+        color: green;
+      }
+      .fail {
+        color: red;
+      }
+      .pending {
+        color: orange;
+      }
+      button {
+        padding: 10px 15px;
+        margin: 5px;
+        border: none;
+        border-radius: 5px;
+        background: #007cba;
+        color: white;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #005a8a;
+      }
+      button:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+      }
+      .status {
+        margin: 10px 0;
+        padding: 10px;
+        border-radius: 5px;
+      }
+      .alert-success {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+      .alert-error {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+      .alert-warning {
+        background-color: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeaa7;
+      }
+      .alert-info {
+        background-color: #d1ecf1;
+        color: #0c5460;
+        border: 1px solid #bee5eb;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Push Notification Testing</h1>
+
+    <div class="test-section">
+      <h2>Current Status</h2>
+      <div id="current-status" class="status alert-info">Checking...</div>
+    </div>
+
+    <div class="test-section">
+      <h2>Permission Test</h2>
+      <p>Test the notification permission flow:</p>
+      <button id="test-permission">Test Permission Request</button>
+      <div id="permission-result"></div>
+    </div>
+
+    <div class="test-section">
+      <h2>Service Worker Test</h2>
+      <p>Test service worker registration:</p>
+      <button id="test-sw">Test Service Worker</button>
+      <div id="sw-result"></div>
+    </div>
+
+    <div class="test-section">
+      <h2>Push Manager Test</h2>
+      <p>Test push manager functionality:</p>
+      <button id="test-push-support">Test Push Support</button>
+      <div id="push-result"></div>
+    </div>
+
+    <div class="test-section">
+      <h2>Manual Notification Test</h2>
+      <p>Test manual notification (if permission granted):</p>
+      <button id="test-notification">Send Test Notification</button>
+      <div id="notification-result"></div>
+    </div>
+
+    <div class="test-section">
+      <h2>Instructions</h2>
+      <ol>
+        <li>Test permission request to see the browser's permission dialog</li>
+        <li>
+          If permission is denied, reset it in browser settings and try again
+        </li>
+        <li>Check if all components are working properly</li>
+        <li>
+          Go to the main app at <a href="/">home page</a> and try the
+          notification features
+        </li>
+      </ol>
+    </div>
+
+    <script>
+      function updateStatus() {
+        const statusEl = document.getElementById("current-status");
+
+        if (!("Notification" in window)) {
+          statusEl.textContent =
+            "❌ Notifications not supported in this browser";
+          statusEl.className = "status alert-error";
+          return;
+        }
+
+        if (!("PushManager" in window)) {
+          statusEl.textContent =
+            "❌ Push Manager not supported in this browser";
+          statusEl.className = "status alert-error";
+          return;
+        }
+
+        const permission = Notification.permission;
+
+        if (permission === "granted") {
+          statusEl.textContent = "✅ Notifications permission granted";
+          statusEl.className = "status alert-success";
+        } else if (permission === "denied") {
+          statusEl.textContent = "🚫 Notifications permission denied";
+          statusEl.className = "status alert-error";
+        } else {
+          statusEl.textContent =
+            "⚠️ Notifications permission not requested yet";
+          statusEl.className = "status alert-warning";
+        }
+      }
+
+      document
+        .getElementById("test-permission")
+        .addEventListener("click", async () => {
+          const resultEl = document.getElementById("permission-result");
+          const button = document.getElementById("test-permission");
+
+          button.disabled = true;
+          button.textContent = "Requesting...";
+
+          try {
+            if (!("Notification" in window)) {
+              throw new Error("Notifications not supported");
+            }
+
+            const permission = await Notification.requestPermission();
+
+            if (permission === "granted") {
+              resultEl.innerHTML =
+                '<div class="status alert-success">✅ Permission granted successfully!</div>';
+            } else if (permission === "denied") {
+              resultEl.innerHTML =
+                '<div class="status alert-error">❌ Permission denied. Please check browser settings.</div>';
+            } else {
+              resultEl.innerHTML =
+                '<div class="status alert-warning">⚠️ Permission request dismissed.</div>';
+            }
+
+            updateStatus();
+          } catch (error) {
+            resultEl.innerHTML = `<div class="status alert-error">❌ Error: ${error.message}</div>`;
+          } finally {
+            button.disabled = false;
+            button.textContent = "Test Permission Request";
+          }
+        });
+
+      document.getElementById("test-sw").addEventListener("click", async () => {
+        const resultEl = document.getElementById("sw-result");
+
+        try {
+          if (!("serviceWorker" in navigator)) {
+            throw new Error("Service Worker not supported");
+          }
+
+          const registration = await navigator.serviceWorker.getRegistration();
+
+          if (registration) {
+            resultEl.innerHTML =
+              '<div class="status alert-success">✅ Service Worker is registered and active</div>';
+          } else {
+            resultEl.innerHTML =
+              '<div class="status alert-warning">⚠️ Service Worker not found</div>';
+          }
+        } catch (error) {
+          resultEl.innerHTML = `<div class="status alert-error">❌ Error: ${error.message}</div>`;
+        }
+      });
+
+      document
+        .getElementById("test-push-support")
+        .addEventListener("click", async () => {
+          const resultEl = document.getElementById("push-result");
+
+          try {
+            if (!("PushManager" in window)) {
+              throw new Error("Push Manager not supported");
+            }
+
+            if (!("serviceWorker" in navigator)) {
+              throw new Error("Service Worker required for push notifications");
+            }
+
+            const registration =
+              await navigator.serviceWorker.getRegistration();
+
+            if (!registration) {
+              throw new Error("Service Worker not registered");
+            }
+
+            const subscription =
+              await registration.pushManager.getSubscription();
+
+            if (subscription) {
+              resultEl.innerHTML =
+                '<div class="status alert-success">✅ Push Manager working and subscribed</div>';
+            } else {
+              resultEl.innerHTML =
+                '<div class="status alert-info">ℹ️ Push Manager working but not subscribed</div>';
+            }
+          } catch (error) {
+            resultEl.innerHTML = `<div class="status alert-error">❌ Error: ${error.message}</div>`;
+          }
+        });
+
+      document
+        .getElementById("test-notification")
+        .addEventListener("click", () => {
+          const resultEl = document.getElementById("notification-result");
+
+          if (Notification.permission !== "granted") {
+            resultEl.innerHTML =
+              '<div class="status alert-warning">⚠️ Permission not granted. Test permission first.</div>';
+            return;
+          }
+
+          try {
+            const notification = new Notification("Test Notification", {
+              body: "This is a test notification from the PWA test page.",
+              icon: "/icons/icon-192x192.png",
+              badge: "/icons/icon-72x72.png",
+              tag: "test-notification",
+            });
+
+            notification.onclick = () => {
+              console.log("Notification clicked");
+              notification.close();
+            };
+
+            resultEl.innerHTML =
+              '<div class="status alert-success">✅ Test notification sent!</div>';
+          } catch (error) {
+            resultEl.innerHTML = `<div class="status alert-error">❌ Error: ${error.message}</div>`;
+          }
+        });
+
+      // Initialize
+      updateStatus();
+    </script>
+  </body>
+</html>
