@@ -1,52 +1,53 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Icon Generator</title>
-</head>
-<body>
+  </head>
+  <body>
     <h1>Generating PWA Icons...</h1>
-    <canvas id="canvas" style="display: none;"></canvas>
-    
+    <canvas id="canvas" style="display: none"></canvas>
+
     <script>
-        const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
-        
-        const sizes = [72, 96, 128, 144, 152, 192, 384, 512];
-        
-        function generateIcon(size) {
-            canvas.width = size;
-            canvas.height = size;
-            
-            // Background
-            ctx.fillStyle = '#333333';
-            ctx.fillRect(0, 0, size, size);
-            
-            // Text
-            ctx.fillStyle = '#ffffff';
-            ctx.font = `${size * 0.2}px Arial`;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText('DS', size / 2, size / 2);
-            
-            // Convert to blob and download
-            canvas.toBlob((blob) => {
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `icon-${size}x${size}.png`;
-                a.click();
-                URL.revokeObjectURL(url);
-            });
-        }
-        
-        // Generate all icons
-        sizes.forEach((size, index) => {
-            setTimeout(() => generateIcon(size), index * 1000);
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+
+      const sizes = [72, 96, 128, 144, 152, 192, 384, 512];
+
+      function generateIcon(size) {
+        canvas.width = size;
+        canvas.height = size;
+
+        // Background
+        ctx.fillStyle = "#333333";
+        ctx.fillRect(0, 0, size, size);
+
+        // Text
+        ctx.fillStyle = "#ffffff";
+        ctx.font = `${size * 0.2}px Arial`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("DS", size / 2, size / 2);
+
+        // Convert to blob and download
+        canvas.toBlob((blob) => {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `icon-${size}x${size}.png`;
+          a.click();
+          URL.revokeObjectURL(url);
         });
-        
-        document.body.innerHTML += '<p>Icons will be downloaded automatically. Save them to the icons folder.</p>';
+      }
+
+      // Generate all icons
+      sizes.forEach((size, index) => {
+        setTimeout(() => generateIcon(size), index * 1000);
+      });
+
+      document.body.innerHTML +=
+        "<p>Icons will be downloaded automatically. Save them to the icons folder.</p>";
     </script>
-</body>
+  </body>
 </html>

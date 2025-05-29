@@ -74,7 +74,7 @@ class AddStoryPage {
       await this._indexedDBService.init();
       await this._pushNotificationService.init();
     } catch (error) {
-      console.error('Failed to initialize services:', error);
+      console.error("Failed to initialize services:", error);
     }
   }
 
@@ -192,7 +192,9 @@ class AddStoryPage {
         } else {
           // Save for offline sync
           await this._saveOfflineStory(description);
-          this.showSuccess('Story saved offline. It will be uploaded when you\'re back online.');
+          this.showSuccess(
+            "Story saved offline. It will be uploaded when you're back online."
+          );
         }
 
         if (this._stream) {
@@ -217,75 +219,124 @@ class AddStoryPage {
         this._position?.lat,
         this._position?.lon
       );
-      
+
       // Register for background sync if supported
-      if ('serviceWorker' in navigator && 'sync' in window.ServiceWorkerRegistration.prototype) {
+      if (
+        "serviceWorker" in navigator &&
+        "sync" in window.ServiceWorkerRegistration.prototype
+      ) {
         const registration = await navigator.serviceWorker.ready;
-        await registration.sync.register('background-sync-story');
+        await registration.sync.register("background-sync-story");
       }
     } catch (error) {
-      console.error('Failed to save offline story:', error);
-      throw new Error('Failed to save story offline');
+      console.error("Failed to save offline story:", error);
+      throw new Error("Failed to save story offline");
     }
   }
 
   async _sendStoryNotification(description) {
     try {
       // Check if push notifications are supported and subscribed
-      const status = await this._pushNotificationService.getSubscriptionStatus();
-      
+      const status =
+        await this._pushNotificationService.getSubscriptionStatus();
+
       if (status.isSubscribed) {
         // The server will send the push notification
-        console.log('Story created, push notification will be sent by server');
+        console.log("Story created, push notification will be sent by server");
       }
     } catch (error) {
-      console.error('Failed to handle push notification:', error);
+      console.error("Failed to handle push notification:", error);
       // Don't throw error as story creation was successful
     }
   }
 
   async _initNotificationSection() {
-    const statusElement = document.getElementById('notification-status');
-    const enableButton = document.getElementById('enable-notifications');
-    const disableButton = document.getElementById('disable-notifications');
+    const statusElement = document.getElementById("notification-status");
+    const enableButton = document.getElementById("enable-notifications");
+    const disableButton = document.getElementById("disable-notifications");
 
     try {
+      // Check if notifications are supported
+      if (!("Notification" in window) || !("PushManager" in window)) {
+        statusElement.innerHTML =
+          '<p class="alert alert-warning">⚠️ Push notifications are not supported in this browser</p>';
+        enableButton.style.display = "none";
+        disableButton.style.display = "none";
+        return;
+      }
+
+      const permissionStatus = this._pushNotificationService.getPermissionStatus();
       const status = await this._pushNotificationService.getSubscriptionStatus();
-      
-      if (status.isSubscribed) {
-        statusElement.innerHTML = '<p class="alert alert-success">✅ Push notifications are enabled</p>';
-        disableButton.style.display = 'inline-block';
-        enableButton.style.display = 'none';
+
+      if (permissionStatus === "denied") {
+        statusElement.innerHTML =
+          '<p class="alert alert-error">🚫 Notifications are blocked. Please enable them in your browser settings.</p>';
+        enableButton.style.display = "none";
+        disableButton.style.display = "none";
+      } else if (status.isSubscribed) {
+        statusElement.innerHTML =
+          '<p class="alert alert-success">✅ Push notifications are enabled</p>';
+        disableButton.style.display = "inline-block";
+        enableButton.style.display = "none";
       } else {
-        statusElement.innerHTML = '<p class="alert alert-info">🔔 Enable push notifications to get notified when your stories are published</p>';
-        enableButton.style.display = 'inline-block';
-        disableButton.style.display = 'none';
+        statusElement.innerHTML =
+          '<p class="alert alert-info">🔔 Enable push notifications to get notified when your stories are published</p>';
+        enableButton.style.display = "inline-block";
+        disableButton.style.display = "none";
       }
     } catch (error) {
-      statusElement.innerHTML = '<p class="alert alert-warning">⚠️ Push notifications are not supported in this browser</p>';
-      enableButton.style.display = 'none';
-      disableButton.style.display = 'none';
+      console.error("Error checking notification status:", error);
+      statusElement.innerHTML =
+        '<p class="alert alert-warning">⚠️ Unable to check notification status</p>';
+      enableButton.style.display = "none";
+      disableButton.style.display = "none";
     }
 
-    enableButton.addEventListener('click', async () => {
+    enableButton.addEventListener("click", async () => {
       try {
+        // Show loading state
+        enableButton.disabled = true;
+        enableButton.textContent = "Enabling...";
+        
+        // Check permission first
+        const permissionStatus = this._pushNotificationService.getPermissionStatus();
+        
+        if (permissionStatus === "denied") {
+          throw new Error("Notifications are blocked. Please enable them in your browser settings and try again.");
+        }
+        
         await this._pushNotificationService.subscribe();
         await this._initNotificationSection(); // Refresh the section
-        this.showSuccess('Push notifications enabled successfully!');
+        this.showSuccess("Push notifications enabled successfully!");
       } catch (error) {
-        console.error('Failed to enable notifications:', error);
-        this.showError('Failed to enable push notifications');
+        console.error("Failed to enable notifications:", error);
+        
+        // Provide specific error messages
+        let errorMessage = "Failed to enable push notifications";
+        if (error.message.includes("permission")) {
+          errorMessage = "Permission denied. Please allow notifications in your browser and try again.";
+        } else if (error.message.includes("login")) {
+          errorMessage = "Please log in first to enable notifications.";
+        } else if (error.message.includes("settings")) {
+          errorMessage = error.message;
+        }
+        
+        this.showError(errorMessage);
+      } finally {
+        // Reset button state
+        enableButton.disabled = false;
+        enableButton.textContent = "Enable Notifications";
       }
     });
 
-    disableButton.addEventListener('click', async () => {
+    disableButton.addEventListener("click", async () => {
       try {
         await this._pushNotificationService.unsubscribe();
         await this._initNotificationSection(); // Refresh the section
-        this.showSuccess('Push notifications disabled successfully!');
+        this.showSuccess("Push notifications disabled successfully!");
       } catch (error) {
-        console.error('Failed to disable notifications:', error);
-        this.showError('Failed to disable push notifications');
+        console.error("Failed to disable notifications:", error);
+        this.showError("Failed to disable push notifications");
       }
     });
   }

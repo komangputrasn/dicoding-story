@@ -1,0 +1,60 @@
+Nama: Komang Putra Suardana  
+GitHub Username: komangputrasn  
+URL Aplikasi: https://komangputrasn.github.io/dicoding-story  
+
+=== PWA Features Implemented ===
+
+1. Web App Manifest (manifest.json)
+   - Complete PWA configuration with name, icons, theme colors
+   - Installable with proper display mode and orientation
+   - Icon sizes: 72x72, 96x96, 128x128, 144x144, 152x152, 192x192, 384x384, 512x512
+
+2. Service Worker (sw.js)
+   - Cache-first strategy for app shell
+   - Network-first strategy for API calls
+   - Push notification handling
+   - Background sync for offline story submission
+   - Automatic cache updates
+
+3. IndexedDB Integration
+   - Favorite stories storage and management
+   - Offline stories for background sync
+   - Cached stories for offline viewing
+   - Complete CRUD operations
+
+4. Push Notifications
+   - VAPID key integration
+   - User subscription management
+   - Notification permission handling
+   - Background notification processing
+
+5. PWA Features
+   - Install prompt with custom UI
+   - Offline detection and indicator
+   - Responsive design with mobile-first approach
+   - Application shell architecture
+
+6. Additional Features
+   - Favorites page for managing favorite stories
+   - Heart button for adding/removing favorites
+   - Offline story submission with background sync
+   - Update notifications for new service worker versions
+
+=== Testing Instructions ===
+
+1. Open the application in Chrome/Edge on mobile or desktop
+2. Check for install prompt to install as PWA
+3. Test offline functionality by going offline
+4. Test push notifications by enabling them in settings
+5. Test favorites by clicking heart icons on stories
+6. Test offline story submission when offline
+
+=== Technical Implementation ===
+
+- SPA Architecture with hash-based routing
+- ES6 Modules and modern JavaScript
+- Responsive CSS with mobile-first design
+- REST API integration with Dicoding Story API
+- Progressive Enhancement for PWA features
+- Accessibility features with proper ARIA labels
+- Performance optimization with caching strategies

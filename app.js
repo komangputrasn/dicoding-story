@@ -56,7 +56,9 @@ class App {
   async _registerServiceWorker() {
     if ("serviceWorker" in navigator) {
       try {
-        const registration = await navigator.serviceWorker.register(new URL('./sw.js', import.meta.url));
+        const registration = await navigator.serviceWorker.register(
+          new URL("./sw.js", import.meta.url)
+        );
         console.log("Service Worker registered successfully:", registration);
 
         // Handle service worker updates
@@ -100,7 +102,7 @@ class App {
   _setupInstallPrompt() {
     let deferredPrompt;
 
-    window.addEventListener('beforeinstallprompt', (e) => {
+    window.addEventListener("beforeinstallprompt", (e) => {
       // Prevent the mini-infobar from appearing on mobile
       e.preventDefault();
       // Stash the event so it can be triggered later
@@ -109,16 +111,16 @@ class App {
       this._showInstallPrompt(deferredPrompt);
     });
 
-    window.addEventListener('appinstalled', () => {
-      console.log('PWA was installed');
+    window.addEventListener("appinstalled", () => {
+      console.log("PWA was installed");
       this._hideInstallPrompt();
     });
   }
 
   _showInstallPrompt(deferredPrompt) {
-    const installPrompt = document.createElement('div');
-    installPrompt.className = 'install-prompt';
-    installPrompt.id = 'install-prompt';
+    const installPrompt = document.createElement("div");
+    installPrompt.className = "install-prompt";
+    installPrompt.id = "install-prompt";
     installPrompt.innerHTML = `
       <p>📱 Install Dicoding Story App for a better experience!</p>
       <button id="install-app">Install</button>
@@ -127,24 +129,26 @@ class App {
 
     document.body.appendChild(installPrompt);
 
-    document.getElementById('install-app').addEventListener('click', async () => {
-      // Show the install prompt
-      deferredPrompt.prompt();
-      // Wait for the user to respond to the prompt
-      const { outcome } = await deferredPrompt.userChoice;
-      console.log(`User response to the install prompt: ${outcome}`);
-      // Clear the deferred prompt variable
-      deferredPrompt = null;
-      this._hideInstallPrompt();
-    });
+    document
+      .getElementById("install-app")
+      .addEventListener("click", async () => {
+        // Show the install prompt
+        deferredPrompt.prompt();
+        // Wait for the user to respond to the prompt
+        const { outcome } = await deferredPrompt.userChoice;
+        console.log(`User response to the install prompt: ${outcome}`);
+        // Clear the deferred prompt variable
+        deferredPrompt = null;
+        this._hideInstallPrompt();
+      });
 
-    document.getElementById('dismiss-install').addEventListener('click', () => {
+    document.getElementById("dismiss-install").addEventListener("click", () => {
       this._hideInstallPrompt();
     });
   }
 
   _hideInstallPrompt() {
-    const installPrompt = document.getElementById('install-prompt');
+    const installPrompt = document.getElementById("install-prompt");
     if (installPrompt) {
       installPrompt.remove();
     }
@@ -152,24 +156,25 @@ class App {
 
   _setupOfflineDetection() {
     const showOfflineIndicator = () => {
-      if (!document.getElementById('offline-indicator')) {
-        const indicator = document.createElement('div');
-        indicator.id = 'offline-indicator';
-        indicator.className = 'offline-indicator';
-        indicator.textContent = '📶 You are offline. Some features may be limited.';
+      if (!document.getElementById("offline-indicator")) {
+        const indicator = document.createElement("div");
+        indicator.id = "offline-indicator";
+        indicator.className = "offline-indicator";
+        indicator.textContent =
+          "📶 You are offline. Some features may be limited.";
         document.body.appendChild(indicator);
       }
     };
 
     const hideOfflineIndicator = () => {
-      const indicator = document.getElementById('offline-indicator');
+      const indicator = document.getElementById("offline-indicator");
       if (indicator) {
         indicator.remove();
       }
     };
 
-    window.addEventListener('online', hideOfflineIndicator);
-    window.addEventListener('offline', showOfflineIndicator);
+    window.addEventListener("online", hideOfflineIndicator);
+    window.addEventListener("offline", showOfflineIndicator);
 
     // Check initial state
     if (!navigator.onLine) {

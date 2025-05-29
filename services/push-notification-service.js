@@ -31,27 +31,36 @@ class PushNotificationService {
       throw error;
     }
   }
-
   async requestPermission() {
     try {
-      const permission = await Notification.requestPermission();
+      // Check if Notification API is supported
+      if (!("Notification" in window)) {
+        throw new Error("This browser does not support notifications");
+      }
+
+      // Check current permission status
+      let permission = Notification.permission;
+
+      if (permission === "default") {
+        // Request permission
+        permission = await Notification.requestPermission();
+      }
 
       if (permission === "granted") {
         console.log("Notification permission granted");
         return true;
       } else if (permission === "denied") {
         console.log("Notification permission denied");
-        return false;
+        throw new Error("Notification permission was denied. Please enable notifications in your browser settings.");
       } else {
         console.log("Notification permission dismissed");
-        return false;
+        throw new Error("Notification permission was not granted");
       }
     } catch (error) {
       console.error("Error requesting notification permission:", error);
-      return false;
+      throw error;
     }
   }
-
   async subscribe() {
     try {
       // Check if user is logged in
@@ -59,18 +68,13 @@ class PushNotificationService {
         throw new Error("User must be logged in to subscribe to notifications");
       }
 
-      // Request permission if not already granted
-      if (Notification.permission !== "granted") {
-        const permissionGranted = await this.requestPermission();
-        if (!permissionGranted) {
-          throw new Error("Notification permission not granted");
-        }
-      }
-
       // Initialize if not already done
       if (!this.registration) {
         await this.init();
       }
+
+      // Request permission explicitly first
+      await this.requestPermission();
 
       // Check if already subscribed
       const existingSubscription =
@@ -261,6 +265,17 @@ class PushNotificationService {
     } catch (error) {
       console.error("Failed to send test notification:", error);
     }
+  }
+
+  getPermissionStatus() {
+    if (!("Notification" in window)) {
+      return "unsupported";
+    }
+    return Notification.permission;
+  }
+
+  isPermissionGranted() {
+    return this.getPermissionStatus() === "granted";
   }
 }
 

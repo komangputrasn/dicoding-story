@@ -30,7 +30,7 @@ class DetailPage {
     try {
       await this._indexedDBService.init();
     } catch (error) {
-      console.error('Failed to initialize IndexedDB:', error);
+      console.error("Failed to initialize IndexedDB:", error);
     }
   }
 
@@ -43,7 +43,7 @@ class DetailPage {
       try {
         this._story = await this._indexedDBService.getCachedStory(this._id);
         if (this._story) {
-          console.log('Story loaded from cache');
+          console.log("Story loaded from cache");
         }
       } catch (cacheError) {
         console.error("Error loading from cache:", cacheError);
@@ -72,10 +72,12 @@ class DetailPage {
         <div class="story-actions">
           <button 
             id="favorite-btn" 
-            class="favorite-btn ${isFavorite ? 'is-favorite' : ''}"
-            aria-label="${isFavorite ? 'Remove from favorites' : 'Add to favorites'}"
+            class="favorite-btn ${isFavorite ? "is-favorite" : ""}"
+            aria-label="${
+              isFavorite ? "Remove from favorites" : "Add to favorites"
+            }"
           >
-            ${isFavorite ? '❤️ Remove from Favorites' : '🤍 Add to Favorites'}
+            ${isFavorite ? "❤️ Remove from Favorites" : "🤍 Add to Favorites"}
           </button>
         </div>
         ${
@@ -98,18 +100,18 @@ class DetailPage {
     try {
       return await this._indexedDBService.isFavoriteStory(storyId);
     } catch (error) {
-      console.error('Failed to check favorite status:', error);
+      console.error("Failed to check favorite status:", error);
       return false;
     }
   }
 
   _initFavoriteButton() {
-    const favoriteButton = document.getElementById('favorite-btn');
-    
-    favoriteButton.addEventListener('click', async (e) => {
+    const favoriteButton = document.getElementById("favorite-btn");
+
+    favoriteButton.addEventListener("click", async (e) => {
       e.preventDefault();
-      const isFavorite = favoriteButton.classList.contains('is-favorite');
-      
+      const isFavorite = favoriteButton.classList.contains("is-favorite");
+
       try {
         if (isFavorite) {
           await this._removeFavorite(favoriteButton);
@@ -117,30 +119,30 @@ class DetailPage {
           await this._addFavorite(favoriteButton);
         }
       } catch (error) {
-        console.error('Failed to update favorite:', error);
-        this.showError('Failed to update favorite status');
+        console.error("Failed to update favorite:", error);
+        this.showError("Failed to update favorite status");
       }
     });
   }
 
   async _addFavorite(button) {
     await this._indexedDBService.addFavoriteStory(this._story);
-    
-    button.classList.add('is-favorite');
-    button.textContent = '❤️ Remove from Favorites';
-    button.setAttribute('aria-label', 'Remove from favorites');
-    
-    this.showSuccess('Story added to favorites!');
+
+    button.classList.add("is-favorite");
+    button.textContent = "❤️ Remove from Favorites";
+    button.setAttribute("aria-label", "Remove from favorites");
+
+    this.showSuccess("Story added to favorites!");
   }
 
   async _removeFavorite(button) {
     await this._indexedDBService.removeFavoriteStory(this._story.id);
-    
-    button.classList.remove('is-favorite');
-    button.textContent = '🤍 Add to Favorites';
-    button.setAttribute('aria-label', 'Add to favorites');
-    
-    this.showSuccess('Story removed from favorites!');
+
+    button.classList.remove("is-favorite");
+    button.textContent = "🤍 Add to Favorites";
+    button.setAttribute("aria-label", "Add to favorites");
+
+    this.showSuccess("Story removed from favorites!");
   }
 
   _initMap() {
@@ -214,7 +216,7 @@ class DetailPage {
         ${message}
       </div>
     `;
-    
+
     // Auto-hide success message after 3 seconds
     setTimeout(() => {
       errorContainer.style.display = "none";
