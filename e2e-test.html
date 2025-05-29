@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Push Notification E2E Test - Dicoding Story</title>
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+      .test-container {
+        max-width: 800px;
+        margin: 20px auto;
+        padding: 20px;
+        font-family: Arial, sans-serif;
+      }
+      .test-section {
+        margin: 20px 0;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        background: #f9f9f9;
+      }
+      .test-result {
+        margin: 10px 0;
+        padding: 8px;
+        border-radius: 3px;
+      }
+      .success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+      .error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+      .warning {
+        background: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeaa7;
+      }
+      .info {
+        background: #d1ecf1;
+        color: #0c5460;
+        border: 1px solid #bee5eb;
+      }
+      button {
+        padding: 10px 20px;
+        margin: 5px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        background: #007bff;
+        color: white;
+      }
+      button:hover {
+        background: #0056b3;
+      }
+      button:disabled {
+        background: #6c757d;
+        cursor: not-allowed;
+      }
+      .log-container {
+        background: #000;
+        color: #00ff00;
+        padding: 10px;
+        border-radius: 5px;
+        font-family: monospace;
+        height: 200px;
+        overflow-y: auto;
+        white-space: pre-wrap;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="test-container">
+      <h1>🧪 Push Notification E2E Test</h1>
+      <p>
+        Comprehensive testing of push notification fixes for Dicoding Story PWA
+      </p>
+
+      <div class="test-section">
+        <h2>📱 Browser Support Check</h2>
+        <div id="browser-support-results"></div>
+      </div>
+
+      <div class="test-section">
+        <h2>🔐 Permission Management Test</h2>
+        <div id="permission-status"></div>
+        <button id="request-permission-btn">Request Permission</button>
+        <button id="check-permission-btn">Check Permission</button>
+        <div id="permission-results"></div>
+      </div>
+
+      <div class="test-section">
+        <h2>⚙️ Service Worker Test</h2>
+        <div id="sw-status"></div>
+        <button id="register-sw-btn">Register Service Worker</button>
+        <button id="check-sw-btn">Check Service Worker</button>
+        <div id="sw-results"></div>
+      </div>
+
+      <div class="test-section">
+        <h2>🔔 Push Notification Service Test</h2>
+        <button id="load-service-btn">Load Push Service</button>
+        <button id="test-subscribe-btn">Test Subscribe</button>
+        <button id="test-unsubscribe-btn">Test Unsubscribe</button>
+        <button id="send-test-notification-btn">Send Test Notification</button>
+        <div id="push-service-results"></div>
+      </div>
+
+      <div class="test-section">
+        <h2>📊 Error Handling Test</h2>
+        <button id="test-denied-permission-btn">
+          Simulate Denied Permission
+        </button>
+        <button id="test-unsupported-browser-btn">
+          Simulate Unsupported Browser
+        </button>
+        <button id="test-network-error-btn">Simulate Network Error</button>
+        <div id="error-handling-results"></div>
+      </div>
+
+      <div class="test-section">
+        <h2>📝 Test Log</h2>
+        <div id="test-log" class="log-container"></div>
+        <button id="clear-log-btn">Clear Log</button>
+        <button id="export-log-btn">Export Log</button>
+      </div>
+
+      <div class="test-section">
+        <h2>🎯 Quick Actions</h2>
+        <button id="run-all-tests-btn">Run All Tests</button>
+        <button id="reset-all-btn">Reset All</button>
+        <a
+          href="/"
+          style="
+            display: inline-block;
+            padding: 10px 20px;
+            background: #28a745;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 5px;
+          "
+          >← Back to Main App</a
+        >
+      </div>
+    </div>
+
+    <script>
+      class E2ENotificationTester {
+        constructor() {
+          this.log = this.log.bind(this);
+          this.initializeUI();
+          this.runInitialChecks();
+        }
+
+        log(message, type = "info") {
+          const timestamp = new Date().toLocaleTimeString();
+          const logContainer = document.getElementById("test-log");
+          const typeColors = {
+            info: "#00ff00",
+            success: "#00ff00",
+            warning: "#ffff00",
+            error: "#ff0000",
+          };
+
+          const logEntry = `[${timestamp}] ${message}\n`;
+          logContainer.innerHTML += `<span style="color: ${
+            typeColors[type] || "#00ff00"
+          }">${logEntry}</span>`;
+          logContainer.scrollTop = logContainer.scrollHeight;
+
+          console.log(`[E2E Test] ${message}`);
+        }
+
+        showResult(containerId, message, type = "info") {
+          const container = document.getElementById(containerId);
+          const resultDiv = document.createElement("div");
+          resultDiv.className = `test-result ${type}`;
+          resultDiv.textContent = message;
+          container.appendChild(resultDiv);
+        }
+
+        clearResults(containerId) {
+          const container = document.getElementById(containerId);
+          container.innerHTML = "";
+        }
+
+        initializeUI() {
+          // Browser Support Check
+          this.checkBrowserSupport();
+
+          // Permission Management
+          document
+            .getElementById("request-permission-btn")
+            .addEventListener("click", () => {
+              this.testPermissionRequest();
+            });
+
+          document
+            .getElementById("check-permission-btn")
+            .addEventListener("click", () => {
+              this.checkPermissionStatus();
+            });
+
+          // Service Worker
+          document
+            .getElementById("register-sw-btn")
+            .addEventListener("click", () => {
+              this.registerServiceWorker();
+            });
+
+          document
+            .getElementById("check-sw-btn")
+            .addEventListener("click", () => {
+              this.checkServiceWorker();
+            });
+
+          // Push Service
+          document
+            .getElementById("load-service-btn")
+            .addEventListener("click", () => {
+              this.loadPushService();
+            });
+
+          document
+            .getElementById("test-subscribe-btn")
+            .addEventListener("click", () => {
+              this.testSubscribe();
+            });
+
+          document
+            .getElementById("test-unsubscribe-btn")
+            .addEventListener("click", () => {
+              this.testUnsubscribe();
+            });
+
+          document
+            .getElementById("send-test-notification-btn")
+            .addEventListener("click", () => {
+              this.sendTestNotification();
+            });
+
+          // Error Handling Tests
+          document
+            .getElementById("test-denied-permission-btn")
+            .addEventListener("click", () => {
+              this.testDeniedPermission();
+            });
+
+          document
+            .getElementById("test-unsupported-browser-btn")
+            .addEventListener("click", () => {
+              this.testUnsupportedBrowser();
+            });
+
+          document
+            .getElementById("test-network-error-btn")
+            .addEventListener("click", () => {
+              this.testNetworkError();
+            });
+
+          // Utility buttons
+          document
+            .getElementById("clear-log-btn")
+            .addEventListener("click", () => {
+              document.getElementById("test-log").innerHTML = "";
+            });
+
+          document
+            .getElementById("export-log-btn")
+            .addEventListener("click", () => {
+              this.exportLog();
+            });
+
+          document
+            .getElementById("run-all-tests-btn")
+            .addEventListener("click", () => {
+              this.runAllTests();
+            });
+
+          document
+            .getElementById("reset-all-btn")
+            .addEventListener("click", () => {
+              this.resetAll();
+            });
+        }
+
+        async runInitialChecks() {
+          this.log("🚀 Starting E2E Push Notification Test Suite", "info");
+          this.checkBrowserSupport();
+          this.checkPermissionStatus();
+          await this.checkServiceWorker();
+        }
+
+        checkBrowserSupport() {
+          this.clearResults("browser-support-results");
+          this.log("📱 Checking browser support...", "info");
+
+          const checks = [
+            { name: "Notifications", check: "Notification" in window },
+            { name: "Service Workers", check: "serviceWorker" in navigator },
+            { name: "Push Manager", check: "PushManager" in window },
+            { name: "Promise Support", check: typeof Promise !== "undefined" },
+          ];
+
+          checks.forEach(({ name, check }) => {
+            if (check) {
+              this.showResult(
+                "browser-support-results",
+                `✅ ${name} supported`,
+                "success"
+              );
+              this.log(`✅ ${name} supported`, "success");
+            } else {
+              this.showResult(
+                "browser-support-results",
+                `❌ ${name} not supported`,
+                "error"
+              );
+              this.log(`❌ ${name} not supported`, "error");
+            }
+          });
+        }
+
+        checkPermissionStatus() {
+          this.clearResults("permission-results");
+          this.log("🔐 Checking permission status...", "info");
+
+          if ("Notification" in window) {
+            const permission = Notification.permission;
+            const statusMessage = `Current permission: ${permission}`;
+
+            document.getElementById("permission-status").textContent =
+              statusMessage;
+
+            switch (permission) {
+              case "granted":
+                this.showResult(
+                  "permission-results",
+                  "✅ Notifications are allowed",
+                  "success"
+                );
+                this.log("✅ Notifications permission granted", "success");
+                break;
+              case "denied":
+                this.showResult(
+                  "permission-results",
+                  "❌ Notifications are blocked",
+                  "error"
+                );
+                this.log("❌ Notifications permission denied", "error");
+                break;
+              case "default":
+                this.showResult(
+                  "permission-results",
+                  "⚠️ Permission not yet requested",
+                  "warning"
+                );
+                this.log(
+                  "⚠️ Notifications permission not requested",
+                  "warning"
+                );
+                break;
+            }
+          } else {
+            this.showResult(
+              "permission-results",
+              "❌ Notifications not supported",
+              "error"
+            );
+            this.log("❌ Notifications not supported in this browser", "error");
+          }
+        }
+
+        async testPermissionRequest() {
+          this.clearResults("permission-results");
+          this.log("🔔 Testing permission request...", "info");
+
+          try {
+            if (!("Notification" in window)) {
+              throw new Error("This browser does not support notifications");
+            }
+
+            const permission = await Notification.requestPermission();
+            this.log(`Permission result: ${permission}`, "info");
+
+            switch (permission) {
+              case "granted":
+                this.showResult(
+                  "permission-results",
+                  "✅ Permission granted successfully",
+                  "success"
+                );
+                this.log("✅ Permission granted successfully", "success");
+                break;
+              case "denied":
+                this.showResult(
+                  "permission-results",
+                  "❌ Permission denied by user",
+                  "error"
+                );
+                this.log("❌ Permission denied by user", "error");
+                break;
+              default:
+                this.showResult(
+                  "permission-results",
+                  "⚠️ Permission request cancelled",
+                  "warning"
+                );
+                this.log("⚠️ Permission request cancelled", "warning");
+            }
+
+            this.checkPermissionStatus();
+          } catch (error) {
+            this.showResult(
+              "permission-results",
+              `❌ Permission request failed: ${error.message}`,
+              "error"
+            );
+            this.log(`❌ Permission request failed: ${error.message}`, "error");
+          }
+        }
+
+        async checkServiceWorker() {
+          this.clearResults("sw-results");
+          this.log("⚙️ Checking service worker status...", "info");
+
+          try {
+            if (!("serviceWorker" in navigator)) {
+              this.showResult(
+                "sw-results",
+                "❌ Service Workers not supported",
+                "error"
+              );
+              this.log("❌ Service Workers not supported", "error");
+              return;
+            }
+
+            const registrations =
+              await navigator.serviceWorker.getRegistrations();
+
+            if (registrations.length > 0) {
+              const reg = registrations[0];
+              this.showResult(
+                "sw-results",
+                `✅ Service Worker registered: ${reg.scope}`,
+                "success"
+              );
+              this.showResult(
+                "sw-results",
+                `Active: ${reg.active ? "Yes" : "No"}`,
+                "info"
+              );
+              this.log(
+                `✅ Service Worker registered at: ${reg.scope}`,
+                "success"
+              );
+              this.log(
+                `Service Worker active: ${reg.active ? "Yes" : "No"}`,
+                "info"
+              );
+
+              document.getElementById(
+                "sw-status"
+              ).textContent = `Service Worker Active: ${
+                reg.active ? "Yes" : "No"
+              }`;
+            } else {
+              this.showResult(
+                "sw-results",
+                "⚠️ No service worker registered",
+                "warning"
+              );
+              this.log("⚠️ No service worker registered", "warning");
+              document.getElementById("sw-status").textContent =
+                "Service Worker: Not Registered";
+            }
+          } catch (error) {
+            this.showResult(
+              "sw-results",
+              `❌ Error checking service worker: ${error.message}`,
+              "error"
+            );
+            this.log(
+              `❌ Error checking service worker: ${error.message}`,
+              "error"
+            );
+          }
+        }
+
+        async registerServiceWorker() {
+          this.clearResults("sw-results");
+          this.log("📝 Registering service worker...", "info");
+
+          try {
+            if (!("serviceWorker" in navigator)) {
+              throw new Error("Service Workers not supported");
+            }
+
+            const registration = await navigator.serviceWorker.register(
+              "/sw.js"
+            );
+            this.showResult(
+              "sw-results",
+              "✅ Service Worker registered successfully",
+              "success"
+            );
+            this.log("✅ Service Worker registered successfully", "success");
+
+            await this.checkServiceWorker();
+          } catch (error) {
+            this.showResult(
+              "sw-results",
+              `❌ Service Worker registration failed: ${error.message}`,
+              "error"
+            );
+            this.log(
+              `❌ Service Worker registration failed: ${error.message}`,
+              "error"
+            );
+          }
+        }
+
+        async loadPushService() {
+          this.clearResults("push-service-results");
+          this.log("📦 Loading push notification service...", "info");
+
+          try {
+            // Dynamically import the push notification service
+            const module = await import(
+              "./services/push-notification-service.js"
+            );
+            this.pushService = new module.PushNotificationService();
+
+            this.showResult(
+              "push-service-results",
+              "✅ Push service loaded successfully",
+              "success"
+            );
+            this.log("✅ Push notification service loaded", "success");
+          } catch (error) {
+            this.showResult(
+              "push-service-results",
+              `❌ Failed to load push service: ${error.message}`,
+              "error"
+            );
+            this.log(
+              `❌ Failed to load push service: ${error.message}`,
+              "error"
+            );
+          }
+        }
+
+        async testSubscribe() {
+          this.clearResults("push-service-results");
+          this.log("📡 Testing push notification subscription...", "info");
+
+          try {
+            if (!this.pushService) {
+              await this.loadPushService();
+            }
+
+            await this.pushService.subscribe();
+            this.showResult(
+              "push-service-results",
+              "✅ Successfully subscribed to push notifications",
+              "success"
+            );
+            this.log(
+              "✅ Successfully subscribed to push notifications",
+              "success"
+            );
+          } catch (error) {
+            this.showResult(
+              "push-service-results",
+              `❌ Subscription failed: ${error.message}`,
+              "error"
+            );
+            this.log(`❌ Subscription failed: ${error.message}`, "error");
+          }
+        }
+
+        async testUnsubscribe() {
+          this.clearResults("push-service-results");
+          this.log("📡 Testing push notification unsubscription...", "info");
+
+          try {
+            if (!this.pushService) {
+              await this.loadPushService();
+            }
+
+            await this.pushService.unsubscribe();
+            this.showResult(
+              "push-service-results",
+              "✅ Successfully unsubscribed from push notifications",
+              "success"
+            );
+            this.log(
+              "✅ Successfully unsubscribed from push notifications",
+              "success"
+            );
+          } catch (error) {
+            this.showResult(
+              "push-service-results",
+              `❌ Unsubscription failed: ${error.message}`,
+              "error"
+            );
+            this.log(`❌ Unsubscription failed: ${error.message}`, "error");
+          }
+        }
+
+        async sendTestNotification() {
+          this.clearResults("push-service-results");
+          this.log("🔔 Sending test notification...", "info");
+
+          try {
+            if (Notification.permission !== "granted") {
+              throw new Error("Notification permission not granted");
+            }
+
+            const notification = new Notification("E2E Test Notification", {
+              body: "This is a test notification from the E2E test suite",
+              icon: "/icons/icon-192x192.png",
+              badge: "/icons/icon-72x72.png",
+            });
+
+            notification.onclick = () => {
+              this.log("✅ Test notification clicked", "success");
+              notification.close();
+            };
+
+            this.showResult(
+              "push-service-results",
+              "✅ Test notification sent",
+              "success"
+            );
+            this.log("✅ Test notification sent", "success");
+          } catch (error) {
+            this.showResult(
+              "push-service-results",
+              `❌ Failed to send test notification: ${error.message}`,
+              "error"
+            );
+            this.log(
+              `❌ Failed to send test notification: ${error.message}`,
+              "error"
+            );
+          }
+        }
+
+        testDeniedPermission() {
+          this.clearResults("error-handling-results");
+          this.log("🚫 Testing denied permission error handling...", "info");
+
+          // Simulate the error handling for denied permission
+          const errorMessage =
+            "Notification permission was denied. Please enable notifications in your browser settings.";
+          this.showResult(
+            "error-handling-results",
+            `Simulated error: ${errorMessage}`,
+            "error"
+          );
+          this.log(
+            `Simulated denied permission error: ${errorMessage}`,
+            "warning"
+          );
+        }
+
+        testUnsupportedBrowser() {
+          this.clearResults("error-handling-results");
+          this.log("🌐 Testing unsupported browser error handling...", "info");
+
+          const errorMessage = "This browser does not support notifications";
+          this.showResult(
+            "error-handling-results",
+            `Simulated error: ${errorMessage}`,
+            "error"
+          );
+          this.log(
+            `Simulated unsupported browser error: ${errorMessage}`,
+            "warning"
+          );
+        }
+
+        testNetworkError() {
+          this.clearResults("error-handling-results");
+          this.log("🌐 Testing network error handling...", "info");
+
+          const errorMessage =
+            "Network error occurred while subscribing to push notifications";
+          this.showResult(
+            "error-handling-results",
+            `Simulated error: ${errorMessage}`,
+            "error"
+          );
+          this.log(`Simulated network error: ${errorMessage}`, "warning");
+        }
+
+        exportLog() {
+          const logContent = document.getElementById("test-log").textContent;
+          const blob = new Blob([logContent], { type: "text/plain" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `push-notification-test-log-${new Date()
+            .toISOString()
+            .slice(0, 19)
+            .replace(/:/g, "-")}.txt`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+
+          this.log("📄 Test log exported", "success");
+        }
+
+        async runAllTests() {
+          this.log("🚀 Running complete test suite...", "info");
+
+          // Clear all results
+          this.resetAll();
+
+          // Run all tests in sequence
+          this.checkBrowserSupport();
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+
+          this.checkPermissionStatus();
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+
+          await this.checkServiceWorker();
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+
+          await this.loadPushService();
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+
+          // Test error handling
+          this.testDeniedPermission();
+          await new Promise((resolve) => setTimeout(resolve, 500));
+
+          this.testUnsupportedBrowser();
+          await new Promise((resolve) => setTimeout(resolve, 500));
+
+          this.testNetworkError();
+
+          this.log("✅ Complete test suite finished", "success");
+        }
+
+        resetAll() {
+          // Clear all result containers
+          const resultContainers = [
+            "browser-support-results",
+            "permission-results",
+            "sw-results",
+            "push-service-results",
+            "error-handling-results",
+          ];
+
+          resultContainers.forEach((id) => this.clearResults(id));
+
+          // Reset status displays
+          document.getElementById("permission-status").textContent = "";
+          document.getElementById("sw-status").textContent = "";
+
+          this.log("🔄 All test results cleared", "info");
+        }
+      }
+
+      // Initialize the E2E tester when the page loads
+      document.addEventListener("DOMContentLoaded", () => {
+        window.e2eTester = new E2ENotificationTester();
+      });
+    </script>
+  </body>
+</html>
