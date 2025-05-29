@@ -1,9 +1,13 @@
 import StoryPresenter from "../presenters/story-presenter.js";
+import PushNotificationService from "../services/push-notification-service.js";
+import IndexedDBService from "../services/indexeddb-service.js";
 
 class AddStoryPage {
   constructor(container) {
     this._container = container;
     this._presenter = new StoryPresenter(this);
+    this._pushNotificationService = new PushNotificationService();
+    this._indexedDBService = new IndexedDBService();
     this._map = null;
     this._marker = null;
     this._position = null;
@@ -16,6 +20,15 @@ class AddStoryPage {
       <section class="page form-container" role="region" aria-labelledby="add-story-title">
         <h2 id="add-story-title">Add New Story</h2>
         <div id="alert-container" role="alert" aria-live="assertive"></div>
+        
+        <!-- Push Notification Section -->
+        <div id="notification-section" class="form-group">
+          <h3>Push Notifications</h3>
+          <div id="notification-status"></div>
+          <button type="button" id="enable-notifications" style="display: none;">Enable Notifications</button>
+          <button type="button" id="disable-notifications" style="display: none;">Disable Notifications</button>
+        </div>
+        
         <form id="add-story-form">
           <div class="form-group">
             <label for="description">Description</label>
@@ -49,9 +62,20 @@ class AddStoryPage {
       </section>
     `;
 
+    await this._initServices();
     this._initMap();
     this._initCameraButtons();
     this._initForm();
+    this._initNotificationSection();
+  }
+
+  async _initServices() {
+    try {
+      await this._indexedDBService.init();
+      await this._pushNotificationService.init();
+    } catch (error) {
+      console.error('Failed to initialize services:', error);
+    }
   }
 
   _initMap() {
@@ -153,13 +177,23 @@ class AddStoryPage {
       const description = document.getElementById("description").value;
 
       try {
-        // Use presenter instead of directly calling the API
-        await this._presenter.addStory(
-          description,
-          this._photoBlob,
-          this._position?.lat,
-          this._position?.lon
-        );
+        // Check if online
+        if (navigator.onLine) {
+          // Use presenter instead of directly calling the API
+          await this._presenter.addStory(
+            description,
+            this._photoBlob,
+            this._position?.lat,
+            this._position?.lon
+          );
+
+          // Try to send push notification after successful story creation
+          await this._sendStoryNotification(description);
+        } else {
+          // Save for offline sync
+          await this._saveOfflineStory(description);
+          this.showSuccess('Story saved offline. It will be uploaded when you\'re back online.');
+        }
 
         if (this._stream) {
           this._stream.getTracks().forEach((track) => track.stop());
@@ -171,6 +205,87 @@ class AddStoryPage {
       } catch (error) {
         // Error handling is managed by the presenter
         console.error(error);
+      }
+    });
+  }
+
+  async _saveOfflineStory(description) {
+    try {
+      await this._indexedDBService.addOfflineStory(
+        description,
+        this._photoBlob,
+        this._position?.lat,
+        this._position?.lon
+      );
+      
+      // Register for background sync if supported
+      if ('serviceWorker' in navigator && 'sync' in window.ServiceWorkerRegistration.prototype) {
+        const registration = await navigator.serviceWorker.ready;
+        await registration.sync.register('background-sync-story');
+      }
+    } catch (error) {
+      console.error('Failed to save offline story:', error);
+      throw new Error('Failed to save story offline');
+    }
+  }
+
+  async _sendStoryNotification(description) {
+    try {
+      // Check if push notifications are supported and subscribed
+      const status = await this._pushNotificationService.getSubscriptionStatus();
+      
+      if (status.isSubscribed) {
+        // The server will send the push notification
+        console.log('Story created, push notification will be sent by server');
+      }
+    } catch (error) {
+      console.error('Failed to handle push notification:', error);
+      // Don't throw error as story creation was successful
+    }
+  }
+
+  async _initNotificationSection() {
+    const statusElement = document.getElementById('notification-status');
+    const enableButton = document.getElementById('enable-notifications');
+    const disableButton = document.getElementById('disable-notifications');
+
+    try {
+      const status = await this._pushNotificationService.getSubscriptionStatus();
+      
+      if (status.isSubscribed) {
+        statusElement.innerHTML = '<p class="alert alert-success">✅ Push notifications are enabled</p>';
+        disableButton.style.display = 'inline-block';
+        enableButton.style.display = 'none';
+      } else {
+        statusElement.innerHTML = '<p class="alert alert-info">🔔 Enable push notifications to get notified when your stories are published</p>';
+        enableButton.style.display = 'inline-block';
+        disableButton.style.display = 'none';
+      }
+    } catch (error) {
+      statusElement.innerHTML = '<p class="alert alert-warning">⚠️ Push notifications are not supported in this browser</p>';
+      enableButton.style.display = 'none';
+      disableButton.style.display = 'none';
+    }
+
+    enableButton.addEventListener('click', async () => {
+      try {
+        await this._pushNotificationService.subscribe();
+        await this._initNotificationSection(); // Refresh the section
+        this.showSuccess('Push notifications enabled successfully!');
+      } catch (error) {
+        console.error('Failed to enable notifications:', error);
+        this.showError('Failed to enable push notifications');
+      }
+    });
+
+    disableButton.addEventListener('click', async () => {
+      try {
+        await this._pushNotificationService.unsubscribe();
+        await this._initNotificationSection(); // Refresh the section
+        this.showSuccess('Push notifications disabled successfully!');
+      } catch (error) {
+        console.error('Failed to disable notifications:', error);
+        this.showError('Failed to disable push notifications');
       }
     });
   }

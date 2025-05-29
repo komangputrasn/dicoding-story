@@ -214,3 +214,173 @@ button:hover {
   object-fit: cover;
   margin-bottom: 5px;
 }
+
+/* PWA Styles */
+.update-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background: #007bff;
+  color: white;
+  padding: 10px;
+  text-align: center;
+}
+
+.update-banner button {
+  background: white;
+  color: #007bff;
+  border: none;
+  padding: 5px 10px;
+  margin: 0 5px;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+/* Favorite button styles */
+.favorite-btn {
+  background: #f8f9fa;
+  border: 1px solid #ddd;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-left: 10px;
+  font-size: 0.9em;
+}
+
+.favorite-btn:hover {
+  background: #e9ecef;
+}
+
+.favorite-btn.is-favorite {
+  background: #ff6b6b;
+  color: white;
+  border-color: #ff6b6b;
+}
+
+.story-actions {
+  display: flex;
+  align-items: center;
+  margin-top: 10px;
+}
+
+/* Notification section styles */
+#notification-section {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+}
+
+#notification-section h3 {
+  margin-bottom: 10px;
+  color: #333;
+}
+
+#notification-status .alert {
+  margin-bottom: 10px;
+}
+
+/* Alert styles */
+.alert-info {
+  background-color: #d1ecf1;
+  color: #0c5460;
+  border: 1px solid #bee5eb;
+}
+
+.alert-warning {
+  background-color: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeaa7;
+}
+
+/* Offline indicator */
+.offline-indicator {
+  position: fixed;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #ff6b6b;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 5px;
+  z-index: 1000;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+/* Install prompt */
+.install-prompt {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #333;
+  color: white;
+  padding: 15px 20px;
+  border-radius: 8px;
+  z-index: 1000;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  text-align: center;
+}
+
+.install-prompt button {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 4px;
+  margin: 0 5px;
+  cursor: pointer;
+}
+
+.install-prompt button:hover {
+  background: #0056b3;
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+  .story-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .favorite-btn {
+    margin-left: 0;
+    margin-top: 10px;
+  }
+  
+  .install-prompt {
+    left: 20px;
+    right: 20px;
+    transform: none;
+  }
+}
+
+/* Loading states */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.loading-spinner {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #333;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

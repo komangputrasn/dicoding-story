@@ -10,7 +10,10 @@
   "license": "ISC",
   "description": "",
   "devDependencies": {
+    "@parcel/packager-raw-url": "^2.15.2",
+    "@parcel/transformer-webmanifest": "^2.15.2",
     "autoprefixer": "^10.4.21",
+    "canvas": "^3.1.0",
     "parcel": "^2.15.1",
     "postcss": "^8.5.3",
     "tailwindcss": "^4.1.7"
