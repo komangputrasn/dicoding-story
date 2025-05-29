@@ -1850,8 +1850,20 @@ class AddStoryPage {
         const enableButton = document.getElementById("enable-notifications");
         const disableButton = document.getElementById("disable-notifications");
         try {
+            // Check if notifications are supported
+            if (!("Notification" in window) || !("PushManager" in window)) {
+                statusElement.innerHTML = '<p class="alert alert-warning">\u26A0\uFE0F Push notifications are not supported in this browser</p>';
+                enableButton.style.display = "none";
+                disableButton.style.display = "none";
+                return;
+            }
+            const permissionStatus = this._pushNotificationService.getPermissionStatus();
             const status = await this._pushNotificationService.getSubscriptionStatus();
-            if (status.isSubscribed) {
+            if (permissionStatus === "denied") {
+                statusElement.innerHTML = '<p class="alert alert-error">\uD83D\uDEAB Notifications are blocked. Please enable them in your browser settings.</p>';
+                enableButton.style.display = "none";
+                disableButton.style.display = "none";
+            } else if (status.isSubscribed) {
                 statusElement.innerHTML = '<p class="alert alert-success">\u2705 Push notifications are enabled</p>';
                 disableButton.style.display = "inline-block";
                 enableButton.style.display = "none";
@@ -1861,18 +1873,34 @@ class AddStoryPage {
                 disableButton.style.display = "none";
             }
         } catch (error) {
-            statusElement.innerHTML = '<p class="alert alert-warning">\u26A0\uFE0F Push notifications are not supported in this browser</p>';
+            console.error("Error checking notification status:", error);
+            statusElement.innerHTML = '<p class="alert alert-warning">\u26A0\uFE0F Unable to check notification status</p>';
             enableButton.style.display = "none";
             disableButton.style.display = "none";
         }
         enableButton.addEventListener("click", async ()=>{
             try {
+                // Show loading state
+                enableButton.disabled = true;
+                enableButton.textContent = "Enabling...";
+                // Check permission first
+                const permissionStatus = this._pushNotificationService.getPermissionStatus();
+                if (permissionStatus === "denied") throw new Error("Notifications are blocked. Please enable them in your browser settings and try again.");
                 await this._pushNotificationService.subscribe();
                 await this._initNotificationSection(); // Refresh the section
                 this.showSuccess("Push notifications enabled successfully!");
             } catch (error) {
                 console.error("Failed to enable notifications:", error);
-                this.showError("Failed to enable push notifications");
+                // Provide specific error messages
+                let errorMessage = "Failed to enable push notifications";
+                if (error.message.includes("permission")) errorMessage = "Permission denied. Please allow notifications in your browser and try again.";
+                else if (error.message.includes("login")) errorMessage = "Please log in first to enable notifications.";
+                else if (error.message.includes("settings")) errorMessage = error.message;
+                this.showError(errorMessage);
+            } finally{
+                // Reset button state
+                enableButton.disabled = false;
+                enableButton.textContent = "Enable Notifications";
             }
         });
         disableButton.addEventListener("click", async ()=>{
@@ -1949,33 +1977,35 @@ class PushNotificationService {
     }
     async requestPermission() {
         try {
-            const permission = await Notification.requestPermission();
+            // Check if Notification API is supported
+            if (!("Notification" in window)) throw new Error("This browser does not support notifications");
+            // Check current permission status
+            let permission = Notification.permission;
+            if (permission === "default") // Request permission
+            permission = await Notification.requestPermission();
             if (permission === "granted") {
                 console.log("Notification permission granted");
                 return true;
             } else if (permission === "denied") {
                 console.log("Notification permission denied");
-                return false;
+                throw new Error("Notification permission was denied. Please enable notifications in your browser settings.");
             } else {
                 console.log("Notification permission dismissed");
-                return false;
+                throw new Error("Notification permission was not granted");
             }
         } catch (error) {
             console.error("Error requesting notification permission:", error);
-            return false;
+            throw error;
         }
     }
     async subscribe() {
         try {
             // Check if user is logged in
             if (!this.authService.isLoggedIn()) throw new Error("User must be logged in to subscribe to notifications");
-            // Request permission if not already granted
-            if (Notification.permission !== "granted") {
-                const permissionGranted = await this.requestPermission();
-                if (!permissionGranted) throw new Error("Notification permission not granted");
-            }
             // Initialize if not already done
             if (!this.registration) await this.init();
+            // Request permission explicitly first
+            await this.requestPermission();
             // Check if already subscribed
             const existingSubscription = await this.registration.pushManager.getSubscription();
             if (existingSubscription) {
@@ -2108,6 +2138,13 @@ class PushNotificationService {
         } catch (error) {
             console.error("Failed to send test notification:", error);
         }
+    }
+    getPermissionStatus() {
+        if (!("Notification" in window)) return "unsupported";
+        return Notification.permission;
+    }
+    isPermissionGranted() {
+        return this.getPermissionStatus() === "granted";
     }
 }
 exports.default = PushNotificationService;

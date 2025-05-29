@@ -290,6 +290,12 @@ button:hover {
   border: 1px solid #ffeaa7;
 }
 
+.alert-error {
+  color: #721c24;
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+}
+
 .offline-indicator {
   color: #fff;
   z-index: 1000;
