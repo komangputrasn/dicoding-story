@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PWA Feature Test</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .test-section {
+        margin: 20px 0;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+      }
+      .pass {
+        color: green;
+      }
+      .fail {
+        color: red;
+      }
+      .pending {
+        color: orange;
+      }
+      button {
+        padding: 10px 15px;
+        margin: 5px;
+        border: none;
+        border-radius: 5px;
+        background: #007cba;
+        color: white;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #005a8a;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>PWA Feature Testing Dashboard</h1>
+
+    <div class="test-section">
+      <h2>1. Service Worker Registration</h2>
+      <p id="sw-status" class="pending">Testing...</p>
+      <button onclick="testServiceWorker()">Test Service Worker</button>
+    </div>
+
+    <div class="test-section">
+      <h2>2. Web App Manifest</h2>
+      <p id="manifest-status" class="pending">Testing...</p>
+      <button onclick="testManifest()">Test Manifest</button>
+    </div>
+
+    <div class="test-section">
+      <h2>3. IndexedDB Support</h2>
+      <p id="idb-status" class="pending">Testing...</p>
+      <button onclick="testIndexedDB()">Test IndexedDB</button>
+    </div>
+
+    <div class="test-section">
+      <h2>4. Push Notification Support</h2>
+      <p id="push-status" class="pending">Testing...</p>
+      <button onclick="testPushNotifications()">Test Push Notifications</button>
+    </div>
+
+    <div class="test-section">
+      <h2>5. PWA Installability</h2>
+      <p id="install-status" class="pending">Testing...</p>
+      <button onclick="testInstallability()">Test Install Prompt</button>
+    </div>
+
+    <div class="test-section">
+      <h2>6. Offline Capability</h2>
+      <p id="offline-status" class="pending">Testing...</p>
+      <button onclick="testOfflineCapability()">Test Offline Mode</button>
+    </div>
+
+    <div class="test-section">
+      <h2>7. Application URL</h2>
+      <p><strong>Local:</strong> http://localhost:1234</p>
+      <p>
+        <strong>Production:</strong>
+        <a href="https://komangputrasn.github.io/dicoding-story" target="_blank"
+          >https://komangputrasn.github.io/dicoding-story</a
+        >
+      </p>
+    </div>
+
+    <script>
+      async function testServiceWorker() {
+        const status = document.getElementById("sw-status");
+        try {
+          if ("serviceWorker" in navigator) {
+            const registration =
+              await navigator.serviceWorker.getRegistration();
+            if (registration) {
+              status.innerHTML =
+                '<span class="pass">✓ Service Worker is registered and active</span>';
+            } else {
+              status.innerHTML =
+                '<span class="fail">✗ Service Worker not found</span>';
+            }
+          } else {
+            status.innerHTML =
+              '<span class="fail">✗ Service Worker not supported</span>';
+          }
+        } catch (error) {
+          status.innerHTML =
+            '<span class="fail">✗ Error: ' + error.message + "</span>";
+        }
+      }
+
+      async function testManifest() {
+        const status = document.getElementById("manifest-status");
+        try {
+          const response = await fetch("/manifest.json");
+          if (response.ok) {
+            const manifest = await response.json();
+            status.innerHTML =
+              '<span class="pass">✓ Manifest loaded: ' +
+              manifest.name +
+              "</span>";
+          } else {
+            status.innerHTML = '<span class="fail">✗ Manifest not found</span>';
+          }
+        } catch (error) {
+          status.innerHTML =
+            '<span class="fail">✗ Error: ' + error.message + "</span>";
+        }
+      }
+
+      function testIndexedDB() {
+        const status = document.getElementById("idb-status");
+        try {
+          if ("indexedDB" in window) {
+            const request = indexedDB.open("test-db", 1);
+            request.onsuccess = () => {
+              status.innerHTML =
+                '<span class="pass">✓ IndexedDB is supported and accessible</span>';
+              request.result.close();
+            };
+            request.onerror = () => {
+              status.innerHTML = '<span class="fail">✗ IndexedDB error</span>';
+            };
+          } else {
+            status.innerHTML =
+              '<span class="fail">✗ IndexedDB not supported</span>';
+          }
+        } catch (error) {
+          status.innerHTML =
+            '<span class="fail">✗ Error: ' + error.message + "</span>";
+        }
+      }
+
+      async function testPushNotifications() {
+        const status = document.getElementById("push-status");
+        try {
+          if ("PushManager" in window && "serviceWorker" in navigator) {
+            const permission = await Notification.requestPermission();
+            if (permission === "granted") {
+              status.innerHTML =
+                '<span class="pass">✓ Push notifications supported and permitted</span>';
+            } else if (permission === "denied") {
+              status.innerHTML =
+                '<span class="fail">✗ Push notifications denied</span>';
+            } else {
+              status.innerHTML =
+                '<span class="pending">⚠ Push notifications permission pending</span>';
+            }
+          } else {
+            status.innerHTML =
+              '<span class="fail">✗ Push notifications not supported</span>';
+          }
+        } catch (error) {
+          status.innerHTML =
+            '<span class="fail">✗ Error: ' + error.message + "</span>";
+        }
+      }
+
+      function testInstallability() {
+        const status = document.getElementById("install-status");
+        try {
+          if (window.matchMedia("(display-mode: standalone)").matches) {
+            status.innerHTML =
+              '<span class="pass">✓ App is already installed/running standalone</span>';
+          } else {
+            status.innerHTML =
+              '<span class="pending">⚠ App can be installed (check for install prompt)</span>';
+          }
+        } catch (error) {
+          status.innerHTML =
+            '<span class="fail">✗ Error: ' + error.message + "</span>";
+        }
+      }
+
+      async function testOfflineCapability() {
+        const status = document.getElementById("offline-status");
+        try {
+          if ("serviceWorker" in navigator) {
+            const registration =
+              await navigator.serviceWorker.getRegistration();
+            if (registration && registration.active) {
+              status.innerHTML =
+                '<span class="pass">✓ Offline capability enabled via Service Worker</span>';
+            } else {
+              status.innerHTML =
+                '<span class="fail">✗ No active Service Worker for offline support</span>';
+            }
+          } else {
+            status.innerHTML =
+              '<span class="fail">✗ No offline capability</span>';
+          }
+        } catch (error) {
+          status.innerHTML =
+            '<span class="fail">✗ Error: ' + error.message + "</span>";
+        }
+      }
+
+      // Auto-run tests on load
+      window.addEventListener("load", () => {
+        setTimeout(() => {
+          testServiceWorker();
+          testManifest();
+          testIndexedDB();
+          testInstallability();
+          testOfflineCapability();
+        }, 2000); // Wait 2 seconds for service worker to register
+      });
+    </script>
+  </body>
+</html>
